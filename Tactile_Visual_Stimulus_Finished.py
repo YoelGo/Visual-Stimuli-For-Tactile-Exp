@@ -18,6 +18,9 @@ YELLOW = (255, 255, 0)
 GREY = (127, 127, 127)
 LIGHT_BLUE = (0, 255, 255)
 trial_info = []
+time_stamps_start = []
+time_stamps_end = []
+time_stamps_first_stimuli = []
 
 
 #experiment variables
@@ -60,12 +63,6 @@ def Create_Foreperiod_Pool():
     for i in range(Num_Of_Catch_Trials):
         foreperiods_pool.append(1)
 
-# def print_information():
-#     print('first condition =', start_condition)
-#     print('second condition =', conditions[0])
-#     print('the randomized ISI for Arrhythmic =', randomized_ISI_list)
-#     print('Arrhythmic foreperiods chronologically\n', foreperiods_list_Arrhythmic)
-#     print('rhythmic foreperiods chronologically\n', foreperiods_list_rhythmic)
 
 def csv_name():
     '''
@@ -82,10 +79,13 @@ def csv_name():
     return subj_name
 
 
-def create_csv(info, name):
-    output_CSV = pd.DataFrame(data = info, columns= ['Num', 'Time', 'Condition', 'Catch',
+def create_csv(info, start_times, end_times, onset_times, name):
+    output_CSV = pd.DataFrame(data=info, columns=['Num', 'Condition', 'Catch',
                                                            'ISI', 'Foreperiod'])
-    output_CSV.to_csv(output_path + name + '.csv', index = False)
+    output_CSV['Trial Start'] = start_times
+    output_CSV['1st Simuli Onset'] = onset_times
+    output_CSV['Trial End'] = end_times
+    output_CSV.to_csv(output_path + name + '.csv', index=False)
 
 
 
@@ -196,6 +196,7 @@ class SimpleDecisionTask(object):
 
         # present target
         pygame.time.delay(self.First_ISI)
+        time_stamps_first_stimuli.append(pygame.time.get_ticks())
         self.stimuli_display()
         for i in range(3):
             self.Does_he_want_out()
@@ -203,14 +204,14 @@ class SimpleDecisionTask(object):
             self.stimuli_display()
         foreperiod = foreperiods_pool.pop(random.randrange(len(foreperiods_pool)))
         if foreperiod != 1:
-            trial_info.append([self.trial_count,pygame.time.get_ticks(), 'Rhythmic', 0, [700,700,700], foreperiod])
+            trial_info.append([self.trial_count, 'Rhythmic', 0, [700,700,700], foreperiod])
             foreperiods_list_rhythmic.append(foreperiod)
             pygame.time.delay(foreperiod)
             self.stimuli_display()
             self.trial_num -= 1
             pygame.event.clear()
         else:
-            trial_info.append([self.trial_count, pygame.time.get_ticks(), 'Rhythmic', 1, [700,700,700], foreperiod])
+            trial_info.append([self.trial_count, 'Rhythmic', 1, [700,700,700], foreperiod])
             pygame.time.delay(catch_trial_delay)
             self.trial_num -= 1
             pygame.event.clear()
@@ -222,6 +223,7 @@ class SimpleDecisionTask(object):
         self.Does_he_want_out() #checks if ESCAPE was pressed
 
         # present target
+        time_stamps_first_stimuli.append(pygame.time.get_ticks())
         pygame.time.delay(self.First_ISI)
         self.stimuli_display()
         current_trial_randomized_ISI = []
@@ -236,7 +238,7 @@ class SimpleDecisionTask(object):
         foreperiod = foreperiods_pool.pop(random.randrange(len(foreperiods_pool)))
 
         if foreperiod != 1:
-            trial_info.append([self.trial_count, pygame.time.get_ticks(), 'Arrhythmic', 0, current_trial_randomized_ISI, foreperiod])
+            trial_info.append([self.trial_count, 'Arrhythmic', 0, current_trial_randomized_ISI, foreperiod])
             foreperiods_list_Arrhythmic.append(foreperiod)
             pygame.time.delay(foreperiod)
             self.stimuli_display()
@@ -244,7 +246,7 @@ class SimpleDecisionTask(object):
             pygame.event.clear()
         else:
             trial_info.append(
-                [self.trial_count, pygame.time.get_ticks(), 'Arrhythmic', 1, current_trial_randomized_ISI, foreperiod])
+                [self.trial_count, 'Arrhythmic', 1, current_trial_randomized_ISI, foreperiod])
             pygame.time.delay(catch_trial_delay)
             self.trial_num -= 1
             pygame.event.clear()
@@ -254,11 +256,15 @@ class SimpleDecisionTask(object):
         # start the rounds of the game
             if curr_condition == 'rhythmic':
                 for trial in range(len(foreperiods_pool)):
+                    time_stamps_start.append(pygame.time.get_ticks())
                     self.run_round_rhythmic()
+                    time_stamps_end.append(pygame.time.get_ticks())
                     self.trial_count += 1
             else:
                 for trial in range(len(foreperiods_pool)):
+                    time_stamps_start.append(pygame.time.get_ticks())
                     self.run_round_Arrhythmic()
+                    time_stamps_end.append(pygame.time.get_ticks())
                     self.trial_count += 1
 
 
@@ -285,7 +291,7 @@ pygame.time.delay(inter_trial_delay)
 
 #End screen and create CSV
 Experiment.display_text_on_screen(text_str='Thanks for the participation', text_str_2='To finish, Press SPACE key')
-create_csv(trial_info, subj_name)
+create_csv(trial_info, time_stamps_start, time_stamps_end, time_stamps_first_stimuli, subj_name)
 run_boy = False
 Experiment.wait_for_press()
 pygame.display.quit()
