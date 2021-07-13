@@ -801,7 +801,7 @@ if __name__ == '__main__':
     Experiment.trigg_outlet = trigg_outlet
     pygame.mouse.set_visible(False)
     Experiment.start_instruction_screen()
-    #Experiment.practice()
+    Experiment.practice()
     cur_block = 0
     for i in range(len(conditions)):
         Create_Foreperiod_Pool()
