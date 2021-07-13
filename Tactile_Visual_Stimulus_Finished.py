@@ -37,7 +37,7 @@ time_stamps_first_stimuli = []
 
 
 #experiment variables
-Num_Of_Trials_Each_Period = 1
+Num_Of_Trials_Each_Period = 3
 fore_periods = [600, 800, 1000]
 conditions = ['single_m','single_d','entrainment_m','entrainment_d']                 #add arrhythmic here if needed
 
@@ -110,7 +110,9 @@ class SimpleDecisionTask(object):
         self.current_stimuli_number = 1
         self.start_time = 0
         self.cur_key = ''
-        self.square_or_triangle_target_stimulus = random.choice(['square', 'triangle'])
+        self.target_choices = ['square', 'triangle']
+        self.square_or_triangle_target_stimulus = self.target_choices.pop(random.randrange(len(self.target_choices)))
+        self.square_or_triangle_non_target_stimulus = self.target_choices[0]
 
         # experiments parameters
         self.practice_length = 5
@@ -137,7 +139,7 @@ class SimpleDecisionTask(object):
         return curr_time_stamp.total_seconds()
 
 
-    def display_text_on_screen(self, text_str, text_str_2, text_str_3 = ''):
+    def display_text_on_screen(self, text_str, text_str_2, text_str_3 = '', text_str_4=''):
         self.screen.fill(BLACK)
         pygame.display.flip()
         text = self.font.render(text_str, True, WHITE)
@@ -154,6 +156,11 @@ class SimpleDecisionTask(object):
         textrect = text.get_rect()
         textrect.centerx = self.screen.get_rect().centerx
         textrect.centery = self.screen.get_rect().centery + 45
+        self.screen.blit(text, textrect)
+        text = self.font.render(text_str_4, True, WHITE)
+        textrect = text.get_rect()
+        textrect.centerx = self.screen.get_rect().centerx
+        textrect.centery = self.screen.get_rect().centery + 90
         self.screen.blit(text, textrect)
         pygame.display.flip()
 
@@ -571,10 +578,10 @@ class SimpleDecisionTask(object):
         # start the rounds of the game
         self.trials_per_condition = self.constant_trials_per_condition
         if curr_condition == 'single_m':
-            self.display_text_on_screen(text_str='You will see a single circle followed by a square or a triangle',
+            self.display_text_on_screen(text_str='You will see a single circle followed by a square or a triangle.',
                                         text_str_2='Press SPACE to continue',
                                         text_str_3='if you see a ' +self.square_or_triangle_target_stimulus +
-                                        ' press harder')
+                                        ' press harder.')
             pygame.time.delay(150)
             self.wait_for_press()
             self.screen.fill(BLACK)
@@ -600,8 +607,10 @@ class SimpleDecisionTask(object):
                 count += 1
 
         elif curr_condition == 'single_d':
-            self.display_text_on_screen(text_str='no entrainment - discriminate between suare and circle',
-                                        text_str_2='Press SPACE to continue')
+            self.display_text_on_screen(text_str='You will now see one circle followed by a square or a triangle. afterwhich there will be a short delay.',
+                                        text_str_2='Press SPACE to continue',
+                                        text_str_3='after each trial, report if you saw a '+self.square_or_triangle_target_stimulus+ ' by pressing harder.',
+                                        text_str_4='if you saw a '+self.square_or_triangle_non_target_stimulus+' maintain the same force.')
             pygame.time.delay(150)
             self.wait_for_press()
             self.screen.fill(BLACK)
@@ -627,10 +636,10 @@ class SimpleDecisionTask(object):
                 count += 1
 
         elif curr_condition == 'entrainment_m':
-            self.display_text_on_screen(text_str='You will see a 3 circles followed by a square or a triangle',
+            self.display_text_on_screen(text_str='You will see a 3 circles followed by a square or a triangle.',
                                         text_str_2='Press SPACE to continue',
                                         text_str_3='if you see a ' + self.square_or_triangle_target_stimulus +
-                                                   ' press harder')
+                                                   ' press harder.')
             pygame.time.delay(150)
             Experiment.wait_for_press()
             self.screen.fill(BLACK)
@@ -656,8 +665,10 @@ class SimpleDecisionTask(object):
                 count += 1
 
         elif curr_condition == 'entrainment_d':
-            self.display_text_on_screen(text_str='entrainment - discriminate between square and circle',
-                                        text_str_2='Press SPACE to continue')
+            self.display_text_on_screen(text_str='You will now see 3 circles followed by a square or a triangle. afterwhich there will be a short delay.',
+                                        text_str_2='Press SPACE to continue',
+                                        text_str_3='after each trial, report if you saw a '+self.square_or_triangle_target_stimulus+ ' by pressing harder.',
+                                        text_str_4='if you saw a '+self.square_or_triangle_non_target_stimulus+' keep pressing with the same force.')
             pygame.time.delay(150)
             self.wait_for_press()
             self.screen.fill(BLACK)
@@ -753,7 +764,7 @@ def Ni_data_collection():
 
 
 Ni_collect_proccess = multiprocessing.Process(target=Ni_data_collection)
-experiment_proccess= multiprocessing.Process(target=start_experiment)
+#experiment_proccess= multiprocessing.Process(target=start_experiment)
 
 if __name__ == '__main__':
     trigg_info = pylsl.stream_info('Markers', 'Markers', 1, 0, 'string')
@@ -790,7 +801,7 @@ if __name__ == '__main__':
     Experiment.trigg_outlet = trigg_outlet
     pygame.mouse.set_visible(False)
     Experiment.start_instruction_screen()
-    Experiment.practice()
+    #Experiment.practice()
     cur_block = 0
     for i in range(len(conditions)):
         Create_Foreperiod_Pool()
